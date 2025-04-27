@@ -100,11 +100,12 @@ func CreateBackTrackResponse(
 }
 
 func GetInvestmentInfoResponse(
-	fundInfo request.FundInfoRequest, fundInvestment int64, fundReturn float64,
+	fundInfo request.FundInfoRequest, fundInvestment int64, fundReturn float64, from string,
 ) *response.InvestmentInfoResponse {
 	return &response.InvestmentInfoResponse{
 		SchemeCode: fundInfo.SchemeCode,
 		Amount:     fundInvestment,
 		Returns:    float32(fundReturn),
+		Cagr:       float32(CalculateCagr(fundInvestment, fundReturn, from)),
 	}
 }

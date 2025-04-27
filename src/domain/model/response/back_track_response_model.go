@@ -12,4 +12,5 @@ type InvestmentInfoResponse struct {
 	SchemeCode string  `json:"schemeCode"`
 	Amount     int64   `json:"amount"`
 	Returns    float32 `json:"returns"`
+	Cagr       float32 `json:"cagr"`
 }

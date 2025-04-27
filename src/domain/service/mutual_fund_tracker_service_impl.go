@@ -35,7 +35,16 @@ func (service MutualFundTrackerServiceImpl) SearchFund(fundName string) ([]*mode
 func (service MutualFundTrackerServiceImpl) GetFundHistoricalData(fundId string) (
 	*model.FundHistoricalData, *mfterror.MFTError,
 ) {
-	return service.client.GetFundHistoricalData(fundId)
+	historicalData, fundHistoryErr := service.client.GetFundHistoricalData(fundId)
+	if fundHistoryErr != nil {
+		return nil, fundHistoryErr
+	}
+
+	if historicalData == nil || historicalData.FundMetaData.SchemeCode == 0 {
+		return nil, mfterror.ERR_BAD_REQUEST.WithDetails(fmt.Sprintf("Invalid fund id: %s.", fundId))
+	}
+
+	return historicalData, nil
 }
 
 func (service MutualFundTrackerServiceImpl) GetFundLatestData(fundId string) (
@@ -71,7 +80,7 @@ func (service MutualFundTrackerServiceImpl) getFundHistoricalDatas(request reque
 
 	for _, fundInfo := range request.FundInfos {
 		go func(schemeCode string) {
-			fundHistoricalData, err := service.client.GetFundHistoricalData(schemeCode)
+			fundHistoricalData, err := service.GetFundHistoricalData(schemeCode)
 			if err != nil {
 				errorChan <- err
 				return
@@ -153,7 +162,7 @@ func (service MutualFundTrackerServiceImpl) calculateLumpSumForFund(
 
 	returnAmount := currentNAV * navAtInvestment
 
-	return utils.GetInvestmentInfoResponse(fundInfo, fundInfo.Amount, returnAmount)
+	return utils.GetInvestmentInfoResponse(fundInfo, fundInfo.Amount, returnAmount, from)
 }
 
 func (service MutualFundTrackerServiceImpl) calculateSIPInvestments(
@@ -178,7 +187,8 @@ func (service MutualFundTrackerServiceImpl) calculateSIPInvestments(
 			totalInvestmentAmount += fundInvestment
 			totalReturnAmount += fundReturn
 			investmentInfos = append(
-				investmentInfos, utils.GetInvestmentInfoResponse(fundInfo, fundInvestment, fundReturn),
+				investmentInfos,
+				utils.GetInvestmentInfoResponse(fundInfo, fundInvestment, fundReturn, backtrackRequest.From),
 			)
 			mu.Unlock()
 		}(fundInfo)
