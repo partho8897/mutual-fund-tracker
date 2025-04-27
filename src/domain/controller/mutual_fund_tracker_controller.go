@@ -97,9 +97,11 @@ func (controller MutualFundTrackerControllerImpl) Backtrack(ctx *gin.Context) {
 		return
 	}
 
-	mftError := controller.service.Backtrack(backtrackRequest)
+	response, mftError := controller.service.Backtrack(backtrackRequest)
 	if mftError != nil {
 		ctx.JSON(mftError.GetHTTPErrorCode(), gin.H{"error": mftError.Error()})
 		return
 	}
+
+	ctx.JSON(200, response)
 }

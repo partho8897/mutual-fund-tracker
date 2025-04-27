@@ -1,12 +1,19 @@
 # Mutual Fund Tracker API
 
-This is a project demonstrating a RESTful API in Go for tracking Indian mutual funds. The API allows users to list all mutual funds, search for specific funds, retrieve historical and latest data for a fund, and backtest mutual fund data. It uses the Gin framework for routing and provides structured error handling.
+A RESTful API in Go for tracking Indian mutual funds. The API allows users to list all mutual funds, search for specific funds, retrieve historical and latest data for a fund, and backtest mutual fund data. It uses the Gin framework for routing and provides structured error handling.
 
 ## Table of Contents
 
 - [Features](#features)
 - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installing](#installing)
 - [API Endpoints](#api-endpoints)
+    - [List All Mutual Funds](#list-all-mutual-funds)
+    - [Search for a Mutual Fund](#search-for-a-mutual-fund)
+    - [Get Historical Data for a Mutual Fund](#get-historical-data-for-a-mutual-fund)
+    - [Get Latest Data for a Mutual Fund](#get-latest-data-for-a-mutual-fund)
+    - [Backtest Mutual Fund Data](#backtest-mutual-fund-data)
 - [Usage](#usage)
 - [Contributing](#contributing)
 
@@ -20,7 +27,7 @@ This is a project demonstrating a RESTful API in Go for tracking Indian mutual f
 
 ## Getting Started
 
-These instructions will help you set up and run the project on your local machine for development and testing purposes.
+Follow these instructions to set up and run the project on your local machine for development and testing purposes.
 
 ### Prerequisites
 
@@ -92,27 +99,43 @@ To interact with the API, you can use tools like `curl`, Postman, or any HTTP cl
 
 - **List all mutual funds:**
     ```sh
-    curl -X GET http://localhost:8080/mftracker/v1/list
+    curl -X GET http://localhost:80/mftracker/v1/list
     ```
 
 - **Search for a mutual fund:**
     ```sh
-    curl -X GET "http://localhost:8080/mftracker/v1/search?fundName=HDFC"
+    curl -X GET "http://localhost:80/mftracker/v1/search?fundName=HDFC"
     ```
 
 - **Get historical data for a mutual fund:**
     ```sh
-    curl -X GET http://localhost:8080/mftracker/v1/fund/12345
+    curl -X GET http://localhost:80/mftracker/v1/fund/101281
     ```
 
 - **Get the latest data for a mutual fund:**
     ```sh
-    curl -X GET http://localhost:8080/mftracker/v1/fund/12345/latest
+    curl -X GET http://localhost:80/mftracker/v1/fund/101281/latest
     ```
 
 - **Backtest mutual fund data:**
     ```sh
-    curl -X POST -H "Content-Type: application/json" -d '{"parameter1": "value1", "parameter2": "value2"}' http://localhost:8080/mftracker/v1/backtrack
+    curl --location 'http://localhost:80/mftracker/v1/backtrack' \
+    --header 'Content-Type: application/json' \
+    --data '{
+      "from": "01-01-2022",
+      "investmentType": "Lumpsum",
+      "investmentFrequency": "Monthly",
+      "fundInfos": [
+        {
+          "SchemeCode": "101281",
+          "amount": 10000
+        },
+        {
+          "SchemeCode": "100822",
+          "amount": 10000
+        }
+      ]
+    }'
     ```
 
 ## Contributing
