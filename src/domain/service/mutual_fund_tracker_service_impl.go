@@ -162,7 +162,9 @@ func (service MutualFundTrackerServiceImpl) calculateLumpSumForFund(
 
 	returnAmount := currentNAV * navAtInvestment
 
-	return utils.GetInvestmentInfoResponse(fundInfo, fundInfo.Amount, returnAmount, from)
+	return utils.GetInvestmentInfoResponse(
+		fundInfo, fundInfo.Amount, returnAmount, from, []time.Time{utils.GetDateFromString(from)},
+	)
 }
 
 func (service MutualFundTrackerServiceImpl) calculateSIPInvestments(
@@ -179,7 +181,7 @@ func (service MutualFundTrackerServiceImpl) calculateSIPInvestments(
 		go func(fundInfo request.FundInfoRequest) {
 			defer wg.Done()
 
-			fundInvestment, fundReturn := service.calculateSIPForFund(
+			fundInvestment, fundReturn, investmentDates := service.calculateSIPForFund(
 				fundHistoricalDatasMap, fundInfo, backtrackRequest,
 			)
 
@@ -188,7 +190,9 @@ func (service MutualFundTrackerServiceImpl) calculateSIPInvestments(
 			totalReturnAmount += fundReturn
 			investmentInfos = append(
 				investmentInfos,
-				utils.GetInvestmentInfoResponse(fundInfo, fundInvestment, fundReturn, backtrackRequest.From),
+				utils.GetInvestmentInfoResponse(
+					fundInfo, fundInvestment, fundReturn, backtrackRequest.From, investmentDates,
+				),
 			)
 			mu.Unlock()
 		}(fundInfo)
@@ -202,7 +206,7 @@ func (service MutualFundTrackerServiceImpl) calculateSIPInvestments(
 func (service MutualFundTrackerServiceImpl) calculateSIPForFund(
 	fundHistoricalDatasMap map[string]*model.FundHistoricalData, fundInfo request.FundInfoRequest,
 	backtrackRequest request.BackTrackRequest,
-) (int64, float64) {
+) (int64, float64, []time.Time) {
 	sipAmount := fundInfo.Amount
 	fromDate := utils.GetDateFromString(backtrackRequest.From)
 	toDate := time.Now()
@@ -210,6 +214,7 @@ func (service MutualFundTrackerServiceImpl) calculateSIPForFund(
 
 	var fundTotalInvestment int64
 	var fundTotalReturn float64
+	investmentDates := make([]time.Time, 0)
 
 	for date := fromDate; !date.After(toDate); date = date.AddDate(0, stepMonths, 0) {
 		dataAtInvestmentDate := utils.GetFundDataAtInvestmentDate(
@@ -222,9 +227,11 @@ func (service MutualFundTrackerServiceImpl) calculateSIPForFund(
 		currentNAV, _ := strconv.ParseFloat(currentData.NAV, 32)
 
 		returnAmount := currentNAV * navAtInvestment
+
 		fundTotalInvestment += sipAmount
 		fundTotalReturn += returnAmount
+		investmentDates = append(investmentDates, utils.GetDateFromString(dataAtInvestmentDate.Date))
 	}
 
-	return fundTotalInvestment, fundTotalReturn
+	return fundTotalInvestment, fundTotalReturn, investmentDates
 }
